@@ -12,6 +12,7 @@
 		924C5C611F767A2100D6C35C /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 924C5C5F1F767A2100D6C35C /* Main.storyboard */; };
 		924C5C631F767A2100D6C35C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 924C5C621F767A2100D6C35C /* Assets.xcassets */; };
 		924C5C661F767A2100D6C35C /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 924C5C641F767A2100D6C35C /* LaunchScreen.storyboard */; };
+		D70E3774B71B36287286588D /* LXDynamicHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D70E3DABA3196A07306A27F7 /* LXDynamicHeader.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +23,7 @@
 		924C5C621F767A2100D6C35C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		924C5C651F767A2100D6C35C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		924C5C671F767A2100D6C35C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D70E3DABA3196A07306A27F7 /* LXDynamicHeader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LXDynamicHeader.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,12 +56,21 @@
 		924C5C5A1F767A2100D6C35C /* LXDynamicHeader */ = {
 			isa = PBXGroup;
 			children = (
+				92546A141F8248E5004606B7 /* LXDynamicHeader */,
 				924C5C5B1F767A2100D6C35C /* AppDelegate.swift */,
 				924C5C5D1F767A2100D6C35C /* ViewController.swift */,
 				924C5C5F1F767A2100D6C35C /* Main.storyboard */,
 				924C5C621F767A2100D6C35C /* Assets.xcassets */,
 				924C5C641F767A2100D6C35C /* LaunchScreen.storyboard */,
 				924C5C671F767A2100D6C35C /* Info.plist */,
+			);
+			path = LXDynamicHeader;
+			sourceTree = "<group>";
+		};
+		92546A141F8248E5004606B7 /* LXDynamicHeader */ = {
+			isa = PBXGroup;
+			children = (
+				D70E3DABA3196A07306A27F7 /* LXDynamicHeader.swift */,
 			);
 			path = LXDynamicHeader;
 			sourceTree = "<group>";
@@ -138,6 +149,7 @@
 			files = (
 				924C5C5E1F767A2100D6C35C /* ViewController.swift in Sources */,
 				924C5C5C1F767A2100D6C35C /* AppDelegate.swift in Sources */,
+				D70E3774B71B36287286588D /* LXDynamicHeader.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
