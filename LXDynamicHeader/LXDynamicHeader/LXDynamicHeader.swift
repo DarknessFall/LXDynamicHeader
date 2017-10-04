@@ -43,6 +43,10 @@ class LXDynamicHeader: UIView {
 
     static let defaultFrame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width)
 
+    var contentOffset: CGPoint {
+        return contentView.contentOffset
+    }
+
     var numberOfPages: Int {
         if let i = dataSource?.numberOfPages() {
             return i
@@ -85,6 +89,13 @@ class LXDynamicHeader: UIView {
     }
 
     ///MARK: Public Methods
+    func addToScrollView(_ scrollView: UIScrollView) {
+        self.scrollView = scrollView
+        self.scrollView!.contentInset = UIEdgeInsets(top: frame.height, left: 0, bottom: 0, right: 0)
+        self.scrollView!.setContentOffset(CGPoint(x: 0, y: -frame.height), animated: false)
+        self.scrollView!.addSubview(self)
+    }
+
     func reuseViewForIndex(_ index: Int) -> UIView? {
         ///TODO: 获取重用视图
         return nil
@@ -109,9 +120,28 @@ class LXDynamicHeader: UIView {
         updatePageControlLocation()
 
         contentView.delegate = self
+        contentView.isPagingEnabled = true
+        contentView.bounces = false
+        contentView.showsHorizontalScrollIndicator = false
+        contentView.showsVerticalScrollIndicator = false
         contentView.frame = CGRect(x: 0, y: 0, width: frame.width, height: frame.height)
         contentView.contentSize = CGSize(width: frame.width * CGFloat(numberOfPages), height: frame.height)
         addSubview(contentView)
+
+        if numberOfPages == 1 {
+            let view = dataSource?.headerView(self, forIndex: 0)
+            view!.frame = contentView.bounds
+            contentView.addSubview(view!)
+        } else if numberOfPages > 1 {
+            let view = dataSource?.headerView(self, forIndex: 0)
+            view!.frame = contentView.bounds
+            contentView.addSubview(view!)
+            reusingViews.append(view!)
+            let nextView = dataSource?.headerView(self, forIndex: 1)
+            nextView!.frame = contentView.bounds
+            contentView.addSubview(nextView!)
+            reusingViews.append(nextView!)
+        }
     }
 
     private func updatePageControlLocation() {
@@ -127,15 +157,15 @@ class LXDynamicHeader: UIView {
 ///MARK: UIScrollViewDelegate Methods
 extension LXDynamicHeader: UIScrollViewDelegate {
 
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    internal func scrollViewDidScroll(_ scrollView: UIScrollView) {
 
     }
 
-    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+    internal func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
 
     }
 
-    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+    internal func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
 
     }
 
