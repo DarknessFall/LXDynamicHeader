@@ -84,27 +84,46 @@ class LXDynamicHeader: UIView {
         super.init(coder: aDecoder)
     }
 
-    convenience init(frame: CGRect = defaultFrame, pages: Int, view: () -> UIView) {
-        self.init(frame: CGRect(x: 0, y: 0, width: frame.width, height: frame.height))
+    convenience init(pages: Int, view: () -> UIView) {
+        self.init(frame: .zero)
     }
 
     ///MARK: Public Methods
     func addToScrollView(_ scrollView: UIScrollView) {
+        var currentHeight = LXDynamicHeader.defaultFrame.height
+        if let height = delegate?.headerViewHeight(self, forIndex: currentPage) {
+            currentHeight = height
+        }
+
+        var topInset = currentHeight
+        if #available(iOS 11, *) {
+            topInset += scrollView.adjustedContentInset.top
+        }
+        scrollView.contentInset = UIEdgeInsets(top: topInset, left: 0, bottom: 0, right: 0)
+        scrollView.setContentOffset(CGPoint(x: 0, y: -topInset), animated: false)
+        scrollView.addSubview(self)
+
         self.scrollView = scrollView
-        self.scrollView!.contentInset = UIEdgeInsets(top: frame.height, left: 0, bottom: 0, right: 0)
-        self.scrollView!.setContentOffset(CGPoint(x: 0, y: -frame.height), animated: false)
-        self.scrollView!.addSubview(self)
     }
 
     func reuseViewForIndex(_ index: Int) -> UIView? {
-        ///TODO: 获取重用视图
-        return nil
+        guard reusingViews.count != 0 else {
+            return nil
+        }
+
+        let view = reusingViews[index % 2 == 0 ? 0 : 1]
+
+        return view
     }
 
     func scrollToPage(_ page: Int, animated: Bool = false) {
         currentPage = page
         let contentOffset = CGPoint(x: frame.width * CGFloat(page), y: 0)
         contentView.setContentOffset(contentOffset, animated: animated)
+    }
+    
+    func reloadData() {
+        
     }
 
     ///MARK: Private Methods
@@ -128,19 +147,24 @@ class LXDynamicHeader: UIView {
         contentView.contentSize = CGSize(width: frame.width * CGFloat(numberOfPages), height: frame.height)
         addSubview(contentView)
 
+        var currentHeight = LXDynamicHeader.defaultFrame.height
+        if let height = delegate?.headerViewHeight(self, forIndex: 0) {
+            currentHeight = height
+        }
+
         if numberOfPages == 1 {
-            let view = dataSource?.headerView(self, forIndex: 0)
-            view!.frame = contentView.bounds
-            contentView.addSubview(view!)
+            let view = dataSource!.headerView(self, forIndex: 0)
+            view.frame = contentView.bounds
+            contentView.addSubview(view)
         } else if numberOfPages > 1 {
-            let view = dataSource?.headerView(self, forIndex: 0)
-            view!.frame = contentView.bounds
-            contentView.addSubview(view!)
-            reusingViews.append(view!)
-            let nextView = dataSource?.headerView(self, forIndex: 1)
-            nextView!.frame = contentView.bounds
-            contentView.addSubview(nextView!)
-            reusingViews.append(nextView!)
+            let view = dataSource!.headerView(self, forIndex: 0)
+            view.frame = CGRect(x: 0, y: 0, width: frame.width, height: currentHeight)
+            contentView.addSubview(view)
+            reusingViews.append(view)
+            let nextView = dataSource!.headerView(self, forIndex: 1)
+            nextView.frame = CGRect(x: 0, y: 0, width: frame.width, height: currentHeight)
+            contentView.addSubview(nextView)
+            reusingViews.append(nextView)
         }
     }
 
@@ -149,7 +173,7 @@ class LXDynamicHeader: UIView {
         let height = frame.height
 
         pageControl.frame.origin.x = (width - pageControl.frame.width) / 2
-        pageControl.frame.origin.y = height - pageControl.frame.height - 15
+        pageControl.frame.origin.y = height - pageControl.frame.height - 15.0
     }
 
 }
