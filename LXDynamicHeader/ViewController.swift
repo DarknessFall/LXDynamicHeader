@@ -49,6 +49,6 @@ extension ViewController: LXDynamicHeaderDataSource {
 }
 
 extension ViewController: LXDynamicHeaderDelegate {
-    
+
 }
 

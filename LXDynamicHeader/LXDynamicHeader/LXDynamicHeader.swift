@@ -13,13 +13,29 @@ protocol LXDynamicHeaderDataSource: NSObjectProtocol {
 
 }
 
-@objc protocol LXDynamicHeaderDelegate: NSObjectProtocol {
+protocol LXDynamicHeaderDelegate: NSObjectProtocol {
 
-    @objc optional func headerViewHeight(_ header: LXDynamicHeader, forIndex index: Int) -> CGFloat
+    func headerViewHeight(_ header: LXDynamicHeader, forIndex index: Int) -> CGFloat
 
-    @objc optional func headerViewDidTapped(_ header: LXDynamicHeader, atIndex index: Int)
+    func headerViewDidTapped(_ header: LXDynamicHeader, atIndex index: Int)
 
-    @objc optional func headerViewDidScrolling(_ header: LXDynamicHeader)
+    func headerViewDidScrolling(_ header: LXDynamicHeader)
+
+}
+
+extension LXDynamicHeaderDelegate {
+
+    func headerViewHeight(_ header: LXDynamicHeader, forIndex index: Int) -> CGFloat {
+        return LXDynamicHeader.defaultFrame.height
+    }
+
+    func headerViewDidTapped(_ header: LXDynamicHeader, atIndex index: Int) {
+        print("\(index) page is tapped")
+    }
+
+    func headerViewDidScrolling(_ header: LXDynamicHeader) {
+        print("header view is scrolling")
+    }
 
 }
 
@@ -45,7 +61,7 @@ class LXDynamicHeader: UIView {
     
     var currentHeight: CGFloat {
         var height = LXDynamicHeader.defaultFrame.width
-        if let theHeight = delegate?.headerViewHeight?(self, forIndex: currentPage) {
+        if let theHeight = delegate?.headerViewHeight(self, forIndex: currentPage) {
             height = theHeight
         }
         
@@ -158,10 +174,9 @@ class LXDynamicHeader: UIView {
         pageControl.numberOfPages = numberOfPages
         pageControl.isUserInteractionEnabled = false
         addSubview(pageControl)
-        updatePageControlLocation()
 
         var currentHeight = LXDynamicHeader.defaultFrame.height
-        if let height = delegate?.headerViewHeight?(self, forIndex: 0) {
+        if let height = delegate?.headerViewHeight(self, forIndex: 0) {
             currentHeight = height
         }
 
@@ -169,23 +184,37 @@ class LXDynamicHeader: UIView {
         view.frame = CGRect(x: 0, y: 0, width: frame.width, height: currentHeight)
         contentView.addSubview(view)
 
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(viewDidTapped(_:)))
+        view.addGestureRecognizer(tapGestureRecognizer)
+
         if numberOfPages > 1 {
             let nextView = dataSource!.headerView(self, reusingForIndex: 1)
             nextView.frame = CGRect(x: frame.width, y: 0, width: frame.width, height: currentHeight)
             contentView.addSubview(nextView)
             reusingViews.append(view)
             reusingViews.append(nextView)
+
+            let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(viewDidTapped(_:)))
+            nextView.addGestureRecognizer(tapGestureRecognizer)
         } else {
             reusingViews.append(view)
         }
+
+        updatePageControlLocationWithDynamicHeight(currentHeight)
     }
 
-    private func updatePageControlLocation() {
+    private func updatePageControlLocationWithDynamicHeight(_ dynamicHeight: CGFloat) {
         let width = frame.width
-        let height = frame.height
 
         pageControl.frame.origin.x = (width - pageControl.frame.width) / 2
-        pageControl.frame.origin.y = height - pageControl.frame.height - 15.0
+        pageControl.frame.origin.y = dynamicHeight - pageControl.frame.height - 15.0
+    }
+
+    @objc private func viewDidTapped(_ sender: UIGestureRecognizer) {
+        let currentView = sender.view!
+        let tappedPage = Int(currentView.frame.origin.x / frame.width)
+
+        delegate?.headerViewDidTapped(self, atIndex: tappedPage)
     }
 
 }
@@ -195,6 +224,7 @@ extension LXDynamicHeader: UIScrollViewDelegate {
 
     internal func scrollViewDidScroll(_ scrollView: UIScrollView) {
 
+        delegate?.headerViewDidScrolling(self)
     }
 
     internal func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
@@ -210,13 +240,18 @@ extension LXDynamicHeader: UIScrollViewDelegate {
 ///MARK: KVO
 extension LXDynamicHeader {
     
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+    override func observeValue(forKeyPath keyPath: String?,
+                               of object: Any?,
+                               change: [NSKeyValueChangeKey : Any]?,
+                               context: UnsafeMutableRawPointer?) {
         guard object is UIScrollView else {
             return
         }
+
+        let scrollView = self.scrollView!
         
         if keyPath == "contentOffset" {
-            print(scrollView!.contentOffset)
+            print(scrollView.contentOffset)
         }
     }
     
