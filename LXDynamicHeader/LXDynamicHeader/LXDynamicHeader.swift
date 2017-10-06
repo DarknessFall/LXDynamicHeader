@@ -165,8 +165,66 @@ class LXDynamicHeader: UIView {
 
     }
 
-    ///MARK: Private Methods
-    private func setupContentView() {
+}
+
+///MARK: UIScrollViewDelegate Methods
+extension LXDynamicHeader: UIScrollViewDelegate {
+
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+
+        delegate?.headerViewDidScrolling(self)
+    }
+
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        scrollView.setContentOffset(scrollView.contentOffset, animated: false)
+        lastContentOffsetX = scrollView.contentOffset.x
+        currentPage = calculateTouchedPage()
+    }
+
+    func scrollViewWillBeginDecelerating(_ scrollView: UIScrollView) {
+        let actualPosition = scrollView.panGestureRecognizer.translation(in: scrollView.superview)
+        let right = actualPosition.x < 0
+        if numberOfPages > 2 && currentPage >= 1 {
+            if right && currentPage != numberOfPages - 1 {
+                let view = dataSource!.headerView(self, reusingForIndex: currentPage + 1)
+                view.frame.origin.x = frame.width * CGFloat(currentPage + 1)
+            } else if !right && currentPage != 0 {
+                let view = dataSource!.headerView(self, reusingForIndex: currentPage - 1)
+                view.frame.origin.x = frame.width * CGFloat(currentPage - 1)
+            }
+        }
+    }
+
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        lastContentOffsetX = scrollView.contentOffset.x
+        currentPage = Int(lastContentOffsetX / frame.width)
+    }
+
+}
+
+///MARK: KVO
+extension LXDynamicHeader {
+
+    override func observeValue(forKeyPath keyPath: String?,
+                               of object: Any?,
+                               change: [NSKeyValueChangeKey : Any]?,
+                               context: UnsafeMutableRawPointer?) {
+        guard object is UIScrollView else {
+            return
+        }
+
+        let scrollView = self.scrollView!
+
+        if keyPath == UIScrollView.contentOffsetKey {
+            print(scrollView.contentOffset)
+        }
+    }
+
+}
+
+///MARK: Private Methods
+private extension LXDynamicHeader {
+    func setupContentView() {
         guard numberOfPages != 0 else {
             return
         }
@@ -179,7 +237,7 @@ class LXDynamicHeader: UIView {
         contentView.frame = CGRect(x: 0, y: 0, width: frame.width, height: frame.height)
         contentView.contentSize = CGSize(width: frame.width * CGFloat(numberOfPages), height: frame.height)
         addSubview(contentView)
-        
+
         pageControl.currentPage = 0
         pageControl.numberOfPages = numberOfPages
         pageControl.isUserInteractionEnabled = false
@@ -213,71 +271,37 @@ class LXDynamicHeader: UIView {
         updatePageControlLocationWithDynamicHeight(currentHeight)
     }
 
-    private func updatePageControlLocationWithDynamicHeight(_ dynamicHeight: CGFloat) {
+    func updatePageControlLocationWithDynamicHeight(_ dynamicHeight: CGFloat) {
         let width = frame.width
 
         pageControl.frame.origin.x = (width - pageControl.frame.width) / 2
         pageControl.frame.origin.y = dynamicHeight - pageControl.frame.height - 15.0
     }
 
-    private func calculateTouchedPage() -> Int {
+    func calculateTouchedPage() -> Int {
         let numberHandler = NSDecimalNumberHandler(roundingMode: .bankers,
-                                                   scale: 0,
-                                                   raiseOnExactness: false,
-                                                   raiseOnOverflow: false,
-                                                   raiseOnUnderflow: false,
-                                                   raiseOnDivideByZero: false)
+                scale: 0,
+                raiseOnExactness: false,
+                raiseOnOverflow: false,
+                raiseOnUnderflow: false,
+                raiseOnDivideByZero: false)
         let number = NSDecimalNumber(string: String(describing: lastContentOffsetX / frame.width))
-        
+
         return number.rounding(accordingToBehavior: numberHandler).intValue
     }
 
-    @objc private func viewDidTapped(_ sender: UIGestureRecognizer) {
+    @objc func viewDidTapped(_ sender: UIGestureRecognizer) {
         let currentView = sender.view!
         let tappedPage = Int(currentView.frame.origin.x / frame.width)
 
         delegate?.headerViewDidTapped(self, atIndex: tappedPage)
     }
-
 }
 
-///MARK: UIScrollViewDelegate Methods
-extension LXDynamicHeader: UIScrollViewDelegate {
+//MARK: UIScrollView KVO Keys
+private extension UIScrollView {
 
-    internal func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    static let contentOffsetKey = "contentOffset"
+    static let contentInsetKey = "contentInsetKey"
 
-        delegate?.headerViewDidScrolling(self)
-    }
-
-    internal func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        scrollView.setContentOffset(scrollView.contentOffset, animated: false)
-        lastContentOffsetX = scrollView.contentOffset.x
-        currentPage = calculateTouchedPage()
-    }
-
-    internal func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        lastContentOffsetX = scrollView.contentOffset.x
-        currentPage = Int(lastContentOffsetX / frame.width)
-    }
-
-}
-
-///MARK: KVO
-extension LXDynamicHeader {
-    
-    override func observeValue(forKeyPath keyPath: String?,
-                               of object: Any?,
-                               change: [NSKeyValueChangeKey : Any]?,
-                               context: UnsafeMutableRawPointer?) {
-        guard object is UIScrollView else {
-            return
-        }
-
-        let scrollView = self.scrollView!
-        
-        if keyPath == "contentOffset" {
-            print(scrollView.contentOffset)
-        }
-    }
-    
 }
