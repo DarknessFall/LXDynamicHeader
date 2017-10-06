@@ -12,7 +12,7 @@ class ViewController: UIViewController {
     
     @IBOutlet var scrollView: UIScrollView!
     var header: LXDynamicHeader!
-    let colors: [UIColor] = [.red, .purple, .blue]
+    let colors: [UIColor] = [.red, .orange, .yellow, .green, .blue, .cyan, .purple]
 
     override func viewDidLoad() {
         super.viewDidLoad()
