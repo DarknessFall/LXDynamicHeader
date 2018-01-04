@@ -60,7 +60,7 @@ class LXDynamicHeader: UIView {
         if let theHeight = delegate?.headerViewHeight(self, forIndex: currentPage) {
             height = theHeight
         }
-        
+
         return height
     }
 
@@ -70,7 +70,7 @@ class LXDynamicHeader: UIView {
         }
         
         get {
-            return pageControl.currentPage
+            return max(0, pageControl.currentPage)
         }
     }
     
@@ -83,6 +83,8 @@ class LXDynamicHeader: UIView {
             return pageControl.isHidden
         }
     }
+    
+    var autoZoom = true
 
     weak var delegate: LXDynamicHeaderDelegate?
     weak var dataSource: LXDynamicHeaderDataSource?
@@ -251,14 +253,7 @@ private extension LXDynamicHeader {
 
         updatePageControlLocationWithDynamicHeight(currentHeight)
     }
-
-    func updatePageControlLocationWithDynamicHeight(_ dynamicHeight: CGFloat) {
-        let width = frame.width
-
-        pageControl.frame.origin.x = (width - pageControl.frame.width) / 2
-        pageControl.frame.origin.y = dynamicHeight - pageControl.frame.height - 15.0
-    }
-
+    
     func calculateTouchedPage() -> Int {
         let numberHandler = NSDecimalNumberHandler(roundingMode: .bankers,
                                                    scale: 0,
@@ -267,25 +262,39 @@ private extension LXDynamicHeader {
                                                    raiseOnUnderflow: false,
                                                    raiseOnDivideByZero: false)
         let number = NSDecimalNumber(string: String(describing: lastContentOffsetX / frame.width))
-
+        
         return number.rounding(accordingToBehavior: numberHandler).intValue
+    }
+
+    func updatePageControlLocationWithDynamicHeight(_ dynamicHeight: CGFloat) {
+        let width = frame.width
+
+        pageControl.frame.origin.x = (width - pageControl.frame.width) / 2
+        pageControl.frame.origin.y = dynamicHeight - pageControl.frame.height - 15.0
     }
 
     func updateReusingViewLocationWhenScrolling(contentOffsetX: CGFloat) {
         let right = contentOffsetX > lastContentOffsetX
-        let lastPage = currentPage
+        let previousPage = currentPage
         lastContentOffsetX = contentOffsetX
         currentPage = calculateTouchedPage()
-        let shouldCheck = lastPage != currentPage
-        if numberOfPages > 3 && shouldCheck {
-            if right && currentPage != numberOfPages - 1 {
-                let view = dataSource!.headerView(self, reusingForIndex: currentPage + 1)
-                view.frame.origin.x = frame.width * CGFloat(currentPage + 1)
-            } else if !right && currentPage != 0 {
-                let view = dataSource!.headerView(self, reusingForIndex: currentPage - 1)
-                view.frame.origin.x = frame.width * CGFloat(currentPage - 1)
-            }
+        let shouldCheck = previousPage != currentPage
+        
+        guard numberOfPages > 3 && shouldCheck else {
+            return
         }
+        
+        if right && currentPage != numberOfPages - 1 {
+            let view = dataSource!.headerView(self, reusingForIndex: currentPage + 1)
+            view.frame.origin.x = frame.width * CGFloat(currentPage + 1)
+        } else if !right && currentPage != 0 {
+            let view = dataSource!.headerView(self, reusingForIndex: currentPage - 1)
+            view.frame.origin.x = frame.width * CGFloat(currentPage - 1)
+        }
+    }
+    
+    func updateHeightWhenScrolling(contentOffsetX: CGFloat) {
+        
     }
 
     @objc func viewDidTapped(_ sender: UIGestureRecognizer) {
@@ -297,7 +306,7 @@ private extension LXDynamicHeader {
 
 }
 
-//MARK: UIScrollView KVO Keys
+///MARK: UIScrollView KVO Keys
 private extension UIScrollView {
 
     static let contentOffsetKey = "contentOffset"

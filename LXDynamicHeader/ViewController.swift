@@ -13,6 +13,7 @@ class ViewController: UIViewController {
     @IBOutlet var scrollView: UIScrollView!
     var header: LXDynamicHeader!
     let colors: [UIColor] = [.red, .orange, .yellow, .green, .blue, .cyan, .purple]
+    let heights: [CGFloat] = [300.0, 400.0, 360.0, 230.0, 300.0, 300.0, 240.0]
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -49,6 +50,10 @@ extension ViewController: LXDynamicHeaderDataSource {
 }
 
 extension ViewController: LXDynamicHeaderDelegate {
+
+    func headerViewHeight(_ header: LXDynamicHeader, forIndex index: Int) -> CGFloat {
+        return heights[index]
+    }
 
 }
 
